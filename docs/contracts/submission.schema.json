@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Coldline Task 2.4 public answer contract. The single answer names which bounded mechanism was implemented; the automated checks then verify that the composed policy implements that mechanism and that it excludes out-of-scope content without excluding the caller's own.",
+  "title": "Coldline Task 2.4 answers",
+  "description": "The implemented authorization mechanism, as one enumerated value.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "answers"
+  ],
+  "properties": {
+    "answers": {
+      "description": "The only top-level answer mapping accepted by the public verifier.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selected_filter_type"
+      ],
+      "properties": {
+        "selected_filter_type": {
+          "description": "Which bounded authorization mechanism the composed policy implements.",
+          "enum": [
+            "tenant_boundary",
+            "role_classification"
+          ]
+        }
+      }
+    }
+  }
+}

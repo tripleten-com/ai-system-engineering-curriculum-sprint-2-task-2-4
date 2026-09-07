@@ -1,0 +1,31 @@
+# Coldline - Task 2.4
+# File: submission-sample.yaml
+# Component: Fictional completed answer sheet
+# Purpose: Show the accepted shape.
+# Interacts With: docs/contracts/submission.schema.json
+# Sprint/Task: Sprint 2 - Project 2 / Task 2.4
+# Concepts: Answer-sheet shape
+# Tools: YAML
+
+# Complete submission.yaml from the evidence sources named beside each answer group.
+# Keep the supplied keys; replace empty strings using each field's stated type.
+# Empty values and placeholder text fail verification.
+# Use submission-sample.yaml for format only; do not copy its fictional values.
+# Do not include secrets, personal data, or local absolute paths.
+# This fictional sample is not a result to submit; an exact copy is rejected.
+
+answers:
+  # Task 2.4 — Step 1: Authorization-aware Retriever extension
+  # Inspect access labels and identify authorization requirements.
+  # Select and record one mechanism that restricts which content a caller can
+  # retrieve. Implement and wire it in Step 2, then verify it in Step 3.
+  # Sources: docs/student/task-2-4-contract.md and src/domain/access.py.
+  #
+  # Authorization options (use exact strings; implement one dimension only):
+  # - tenant_boundary: Restrict retrieval to the caller's tenancy, allowing both
+  #   classification tiers within that tenancy.
+  # - role_classification: Restrict classification tier only: a standard caller
+  #   reads standard content; a restricted caller reads both tiers.
+  #
+  # Choose one mechanism above matching the policy you implemented and wired.
+  selected_filter_type: "role_classification"
