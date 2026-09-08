@@ -12,7 +12,8 @@
 # Empty values and placeholder text fail verification.
 # Use submission-sample.yaml for format only; do not copy its fictional values.
 # Do not include secrets, personal data, or local absolute paths.
-# This fictional sample is not a result to submit; an exact copy is rejected.
+# This syntax example deliberately uses a fictional value outside the allowed choices.
+# In submission.yaml, use an exact option listed below that matches your implementation.
 
 answers:
   # Task 2.4 — Step 1: Authorization-aware Retriever extension
@@ -28,4 +29,4 @@ answers:
   #   reads standard content; a restricted caller reads both tiers.
   #
   # Choose one mechanism above matching the policy you implemented and wired.
-  selected_filter_type: "role_classification"
+  selected_filter_type: "example_filter"
