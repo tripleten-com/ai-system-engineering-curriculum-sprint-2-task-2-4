@@ -237,7 +237,13 @@ Task 2.4 asks you to implement **one** bounded authorization mechanism behind th
 `Retriever` contract, and to record which one. Both choices are equally valid and both pass when
 implemented correctly.
 
-You return a declarative `AccessConstraint`; the supplied adapter applies it inside both the dense
+Your provider returns one declarative `AccessConstraint`. In `build_access_constraints`, wrap it
+with the protected `api.access_policy.ComposedAccessConstraints` helper and pass your selected
+filter type explicitly. The helper supplies the other dimension, so the completed application
+enforces both tenant and classification. It cannot repair your selected filter. Record the same
+choice in `answers.selected_filter_type`; never read the answer sheet at runtime.
+
+The supplied adapter applies the composed constraint inside both the dense
 and the sparse query. Filtering therefore happens during query execution, which is the
 requirement — and there is deliberately no place in your surface to drop rows after retrieval.
 
@@ -249,7 +255,7 @@ These paths are student-editable:
 - anything you add under `tests/student/`
 - `submission.yaml`
 
-The `Retriever` port, the retrieval adapter, and `src/domain/access.py` are protected: you change
+The `Retriever` port, the retrieval adapter, `src/domain/access.py`, and `src/api/access_policy.py` are protected: you change
 behavior behind the published contract, not the contract. Read
 [`docs/student/task-2-4-contract.md`](docs/student/task-2-4-contract.md) for what each choice must
 restrict and where each check looks.
@@ -267,7 +273,7 @@ changing what the arms see.
 See **Task 2.4: Authorization-aware `Retriever` extension** in your course platform for the full
 walkthrough. In outline: start the stack and ingest the corpus, inspect the access labels the
 corpus carries, read `src/domain/access.py` and the supplied adapter to see where a constraint is
-applied, choose one mechanism and record it, implement `StudentAccessConstraints`, return it from
+applied, choose one mechanism and record it, implement `StudentAccessConstraints`, compose it with the supplied helper in
 `build_access_constraints`, run `poe authorization` and then `poe verify`, and open your pull
 request.
 

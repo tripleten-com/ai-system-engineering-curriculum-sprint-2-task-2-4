@@ -33,7 +33,11 @@ Implement exactly one of the two supported mechanisms and record which:
   ``standard`` caller reads ``standard`` content; a ``restricted`` caller reads
   both tiers. Tenancy is not restricted.
 
-Record the one you implemented in ``answers.selected_filter_type``.
+Record the one you implemented in ``answers.selected_filter_type`` and pass that
+choice explicitly to the protected ``api.access_policy.ComposedAccessConstraints``
+helper in wiring. The helper supplies the complementary dimension, so completed
+retrieval enforces both tenancy and classification. It cannot repair your selected
+dimension. Your provider is checked separately from the composed application.
 
 Do not implement both, and do not build a multi-attribute policy engine. One
 bounded mechanism is the whole Task.

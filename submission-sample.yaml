@@ -17,6 +17,9 @@
 
 answers:
   # Task 2.4 — Step 1: Authorization-aware Retriever extension
+  # Implement one dimension; the protected helper supplies the other.
+  # Pass the same choice explicitly in wiring. The application enforces BOTH
+  # tenant and classification and must never read this file at runtime.
   # Inspect access labels and identify authorization requirements.
   # Select and record one mechanism that restricts which content a caller can
   # retrieve. Implement and wire it in Step 2, then verify it in Step 3.
