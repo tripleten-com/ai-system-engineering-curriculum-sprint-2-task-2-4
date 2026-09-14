@@ -42,6 +42,9 @@ implements, and that it restricts *only* its own dimension: a `tenant_boundary` 
 also pins the tier fails, and so does the reverse. Do not build a multi-attribute policy engine —
 one bounded mechanism is the whole Task.
 
+This exercise verifies the selected dimension only. The other dimension remains unrestricted;
+a passing result does not demonstrate combined tenant-and-classification protection.
+
 ## Deny-everything is not a pass
 
 `AccessConstraint(tenant_ids=())` excludes every out-of-scope chunk, and also every chunk the
