@@ -23,7 +23,7 @@ supplied reference repository.
 Task 2.4's factory is `build_access_constraints`. It returns the supplied
 unrestricted policy in the starter, which is why retrieval still returns other
 tenancies' chunks and the authorization checks fail until you return your own
-provider.
+provider composed with `api.access_policy.ComposedAccessConstraints`.
 """
 
 import asyncpg
@@ -62,8 +62,11 @@ def build_access_constraints() -> AccessConstraintProvider:
 
     The starter returns the supplied unrestricted policy, which enforces
     nothing: the caller's context is carried through the pipeline and recorded,
-    but no content is filtered. Return your
-    `api.extensions.authorization.StudentAccessConstraints` instead.
+    but no content is filtered. Import `api.access_policy.ComposedAccessConstraints`
+    and your `api.extensions.authorization.StudentAccessConstraints`. Return
+    `ComposedAccessConstraints(StudentAccessConstraints(), selected_filter_type=...)`
+    with your explicit choice string, matching `answers.selected_filter_type`.
+    The helper supplies the other dimension; never read submission.yaml at runtime.
 
     The adapter applies whatever this returns inside both query arms, so the
     constraint decides what is *fetched*, not what is discarded afterwards.

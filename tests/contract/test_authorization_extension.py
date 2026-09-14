@@ -19,7 +19,9 @@ import pytest
 import yaml
 
 import ports
+from api.access_policy import ComposedAccessConstraints
 from api.extensions import wiring
+from api.extensions.authorization import StudentAccessConstraints
 from domain.access import AccessConstraint
 from domain.contracts import AccessTier, AuthorizationContext
 from tests.runtime_config import host_port
@@ -123,10 +125,21 @@ def test_the_composed_policy_actually_restricts_something() -> None:
 def test_the_recorded_choice_matches_the_implemented_mechanism() -> None:
     """Exactly one bounded mechanism, and it is the one recorded."""
     choice = selected_filter_type()
-    standard = _constrain(OWN_TENANT, AccessTier.STANDARD)
-    cleared = _constrain(OWN_TENANT, AccessTier.RESTRICTED)
+    provider = wiring.build_access_constraints()
+    assert isinstance(provider, ComposedAccessConstraints), "use the protected composition helper"
+    assert provider.selected_filter_type == choice, "wiring choice differs from the answer"
+    assert isinstance(provider.selected, StudentAccessConstraints)
+    student = StudentAccessConstraints()
+    standard = student.constrain(
+        AuthorizationContext(tenant_id=OWN_TENANT, clearance=AccessTier.STANDARD)
+    )
+    cleared = student.constrain(
+        AuthorizationContext(tenant_id=OWN_TENANT, clearance=AccessTier.RESTRICTED)
+    )
 
     if choice == "tenant_boundary":
+        assert cleared.tenant_ids == (OWN_TENANT,)
+        assert cleared.access_tiers is None
         assert standard.tenant_ids == (OWN_TENANT,), (
             f"a tenant_boundary constraint must restrict tenancy to the caller's own; "
             f"found {standard.tenant_ids!r}"
@@ -136,6 +149,7 @@ def test_the_recorded_choice_matches_the_implemented_mechanism() -> None:
             "restrict the classification tier"
         )
     else:
+        assert cleared.tenant_ids is None
         assert standard.tenant_ids is None, (
             "a role_classification constraint restricts the classification tier only; it "
             "must not also restrict tenancy"
@@ -170,14 +184,14 @@ def test_permitted_retrieval_still_returns_the_callers_own_content() -> None:
     )
 
 
-def test_out_of_scope_content_is_never_fetched() -> None:
-    """The excluded content must be absent from every stage, not only the results."""
-    choice = selected_filter_type()
-    if choice == "tenant_boundary":
-        text, excluded_document = FOREIGN_QUERY, FOREIGN_DOCUMENT
-    else:
-        text, excluded_document = OWN_RESTRICTED_QUERY, OWN_RESTRICTED_DOCUMENT
-
+@pytest.mark.parametrize(
+    ("text", "excluded_document"),
+    [(FOREIGN_QUERY, FOREIGN_DOCUMENT), (OWN_RESTRICTED_QUERY, OWN_RESTRICTED_DOCUMENT)],
+    ids=["foreign-tenant", "restricted-tier"],
+)
+def test_out_of_scope_content_is_never_fetched(text: str, excluded_document: str) -> None:
+    """Both dimensions must exclude content from every pipeline stage."""
+    selected_filter_type()
     payload = _search(text, OWN_TENANT, "standard")
     identifiers = _every_identifier(payload)
     leaked = sorted(
@@ -189,15 +203,20 @@ def test_out_of_scope_content_is_never_fetched() -> None:
     )
 
 
-def test_a_cleared_caller_still_reaches_its_restricted_content() -> None:
-    """Exclusion must depend on the caller, not be a blanket removal."""
-    choice = selected_filter_type()
-    if choice == "tenant_boundary":
-        payload = _search(FOREIGN_QUERY, FOREIGN_TENANT, "restricted")
-        expected = FOREIGN_DOCUMENT
-    else:
-        payload = _search(OWN_RESTRICTED_QUERY, OWN_TENANT, "restricted")
-        expected = OWN_RESTRICTED_DOCUMENT
+@pytest.mark.parametrize(
+    ("text", "tenant", "expected"),
+    [
+        (FOREIGN_QUERY, FOREIGN_TENANT, FOREIGN_DOCUMENT),
+        (OWN_RESTRICTED_QUERY, OWN_TENANT, OWN_RESTRICTED_DOCUMENT),
+    ],
+    ids=["foreign-owner", "cleared-owner"],
+)
+def test_a_cleared_caller_still_reaches_its_restricted_content(
+    text: str, tenant: str, expected: str
+) -> None:
+    """Both dimensions retain content for its authorized caller."""
+    selected_filter_type()
+    payload = _search(text, tenant, "restricted")
 
     results = payload["results"]
     assert isinstance(results, list)
@@ -205,6 +224,22 @@ def test_a_cleared_caller_still_reaches_its_restricted_content() -> None:
     assert expected in documents, (
         f"the authorized caller could not reach {expected!r}; found {sorted(documents)}"
     )
+
+
+@pytest.mark.parametrize("tenant", [OWN_TENANT, FOREIGN_TENANT, "tenant-new"])
+@pytest.mark.parametrize("clearance", [AccessTier.STANDARD, AccessTier.RESTRICTED])
+def test_composed_policy_enforces_both_dimensions(tenant: str, clearance: AccessTier) -> None:
+    """The actual application composition must protect every caller on both axes."""
+    selected_filter_type()
+    constraint = _constrain(tenant, clearance)
+    assert constraint.tenant_ids == (tenant,)
+    expected = (
+        {AccessTier.STANDARD, AccessTier.RESTRICTED}
+        if clearance is AccessTier.RESTRICTED
+        else {AccessTier.STANDARD}
+    )
+    assert constraint.access_tiers is not None
+    assert set(constraint.access_tiers) == expected
 
 
 def test_the_published_retriever_contract_is_unchanged() -> None:
